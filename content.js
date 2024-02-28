@@ -176,19 +176,35 @@ const uploadFile = function () {
 
 const populateData = function (content) {
     if (content) {
-        console.log(content)
         const table = document.querySelector('table')
-        
+
         const table_rows = table.querySelectorAll('tr')
 
+        const table_col_names = {}
+        table_rows[0].querySelectorAll('th').forEach(function (th, index) {
+            table_col_names[th.innerText.trim()] = index
+        })
+        
         const csv_rows = content.split('\r\n')
         
-        for(let i=1;i<table_rows.length;i++){
+        const csv_col_names = {}
+        csv_rows[0].split(',').forEach(function(th, index){
+            csv_col_names[th.trim()] = index
+        })
+
+        const cols = Object.keys(table_col_names)
+
+        for (let i = 1; i < table_rows.length; i++) {
             const table_cols = table_rows[i].querySelectorAll('td')
 
             const csv_cols = csv_rows[i].split(',')
-            console.log(csv_cols)
-            table_cols[3].querySelector('input').value = csv_cols[3]
+            
+            for(let i=0;i<cols.length;i++) {
+                const input = table_cols[table_col_names[cols[i]]].querySelector('input')
+                if(input) {
+                    input.value = csv_cols[csv_col_names[cols[i]]]
+                }
+            }
         }
     }
     else {
