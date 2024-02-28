@@ -23,7 +23,7 @@ function maskValues(element) {
     var spans = element.querySelectorAll('span');
 
     // Iterate through each span element
-    spans.forEach(function(span) {
+    spans.forEach(function (span) {
         var originalValue = span.textContent.trim();
         var replacementValue;
 
@@ -40,7 +40,6 @@ function maskValues(element) {
         span.textContent = replacementValue;
     });
 }
-
 
 const replaceSelectToSpan = function () {
     let selects = document.querySelectorAll('select');
@@ -92,9 +91,113 @@ const enterValuesInGivenInput = function () {
     });
 }
 
+const downloadTable = function () {
+    const table = document.querySelector('table')
+
+    let content = ''
+    table.querySelectorAll('tr').forEach(function (tr) {
+        let rowData = []
+        tr.querySelectorAll('td, th').forEach(function (td) {
+            const td_input = td.querySelector('input[type="text"]')
+            if (td_input) {
+                rowData.push(td_input.value)
+            }
+            else {
+                rowData.push(td.innerText)
+            }
+        })
+        content += rowData.join(', ') + '\r\n'
+    })
+
+    let fileName = ''
+    document.querySelectorAll('select').forEach(function (select) {
+        fileName += select.selectedOptions[0].innerText
+    })
+    fileName = fileName + '.csv'
+
+    // Create a Blob with the CSV content
+    let blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
+
+    // Create a link element
+    let link = document.createElement("a");
+    if (link.download !== undefined) {
+        // Create a link to the file
+        let url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", fileName);
+
+        // Append the link to the body
+        document.body.appendChild(link);
+
+        // Trigger the download
+        link.click();
+
+        // Clean up
+        document.body.removeChild(link);
+    } else {
+        console.log("Your browser does not support automatic download.");
+    }
+
+}
+
+
+const uploadFile = function () {
+    if (document.getElementById('file_upload')) {
+        console.log('Upload option already added')
+        return
+    }
+
+    let content = ''
+
+
+    const fileElement = document.createElement('input')
+    fileElement.type = 'file'
+    fileElement.id = 'file_upload'
+    document.body.appendChild(fileElement)
+
+
+    fileElement.addEventListener('change', function (e) {
+        const reader = new FileReader()
+        reader.addEventListener('load', function (e) {
+            content = e.target.result
+        })
+        reader.readAsText(fileElement.files[0])
+    })
+
+
+    const populateButton = document.createElement('button')
+    populateButton.id = 'populate'
+    populateButton.textContent = 'Populate'
+    populateButton.addEventListener('click', function (e) {
+        populateData(content)
+    })
+    document.body.appendChild(populateButton)
+}
+
+const populateData = function (content) {
+    if (content) {
+        console.log(content)
+        const table = document.querySelector('table')
+        
+        const table_rows = table.querySelectorAll('tr')
+
+        const csv_rows = content.split('\r\n')
+        
+        for(let i=1;i<table_rows.length;i++){
+            const table_cols = table_rows[i].querySelectorAll('td')
+
+            const csv_cols = csv_rows[i].split(',')
+            console.log(csv_cols)
+            table_cols[3].querySelector('input').value = csv_cols[3]
+        }
+    }
+    else {
+        console.log('File is empty')
+    }
+}
+
 chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
-    console.log("Message :", message)
-    console.log("Sender :", sender)
+
     if (message.type === "replaceSelectToSpan") {
         replaceSelectToSpan()
     }
@@ -115,5 +218,13 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
         let dvReport = document.querySelector("#dvReport")
         maskValues(headerDiv)
         maskValues(dvReport)
+    }
+
+    else if (message.type === "downloadTable") {
+        downloadTable()
+    }
+
+    else if (message.type === "uploadFile") {
+        uploadFile()
     }
 })

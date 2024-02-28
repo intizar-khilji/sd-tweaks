@@ -36,6 +36,18 @@ chrome.runtime.onInstalled.addListener(() => {
         contexts: ["page"]
     });
 
+    chrome.contextMenus.create({
+        id: "downloadTable",
+        title: "Download table",
+        contexts: ["page"]
+    });
+    
+    chrome.contextMenus.create({
+        id: "uploadFile",
+        title: "Upload a file",
+        contexts: ["page"]
+    });
+
 });
 
 
@@ -61,6 +73,12 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
         }
         else if (info.menuItemId === "maskValues") {
             chrome.tabs.sendMessage(tab.id, { type: "maskValues", url: tab.url })
+        }
+        else if (info.menuItemId === "downloadTable") {
+            chrome.tabs.sendMessage(tab.id, { type: "downloadTable", url: tab.url })
+        }
+        else if (info.menuItemId === "uploadFile") {
+            chrome.tabs.sendMessage(tab.id, { type: "uploadFile", url: tab.url })
         }
     }
 });
