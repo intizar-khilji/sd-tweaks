@@ -92,26 +92,33 @@ const enterValuesInGivenInput = function () {
 }
 
 const downloadTable = function () {
-    const table = document.querySelector('table')
-
+    const tables = document.querySelectorAll('table')
+    const table = tables[tables.length - 1]
     let content = ''
     table.querySelectorAll('tr').forEach(function (tr) {
         let rowData = []
         tr.querySelectorAll('td, th').forEach(function (td) {
             const td_input = td.querySelector('input[type="text"]')
+            let td_text = ''
             if (td_input) {
-                rowData.push(td_input.value)
+                td_text = td_input.value.trim()
             }
             else {
-                rowData.push(td.innerText)
+                td_text = td.innerText.trim()
+            }
+            if(rowData) {
+                rowData.push(td_text)
             }
         })
-        content += rowData.join(', ') + '\r\n'
+        content += rowData.join(',') + '\r\n'
     })
 
     let fileName = ''
-    document.querySelectorAll('select').forEach(function (select) {
-        fileName += select.selectedOptions[0].innerText
+    document.querySelectorAll('select').forEach(function (op) {
+        const selectedOption = op.selectedOptions[0]
+        if(selectedOption) {
+            fileName += selectedOption.innerText + '_'
+        } 
     })
     fileName = fileName + '.csv'
 
@@ -184,11 +191,11 @@ const populateData = function (content) {
         table_rows[0].querySelectorAll('th').forEach(function (th, index) {
             table_col_names[th.innerText.trim()] = index
         })
-        
+
         const csv_rows = content.split('\r\n')
-        
+
         const csv_col_names = {}
-        csv_rows[0].split(',').forEach(function(th, index){
+        csv_rows[0].split(',').forEach(function (th, index) {
             csv_col_names[th.trim()] = index
         })
 
@@ -198,10 +205,10 @@ const populateData = function (content) {
             const table_cols = table_rows[i].querySelectorAll('td')
 
             const csv_cols = csv_rows[i].split(',')
-            
-            for(let i=0;i<cols.length;i++) {
+
+            for (let i = 0; i < cols.length; i++) {
                 const input = table_cols[table_col_names[cols[i]]].querySelector('input')
-                if(input) {
+                if (input) {
                     input.value = csv_cols[csv_col_names[cols[i]]]
                 }
             }
