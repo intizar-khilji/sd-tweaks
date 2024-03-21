@@ -1,44 +1,85 @@
-function maskValues(element) {
-    // Function to generate a random string of a specified length
-    function generateRandomText(length) {
-        var result = '';
-        var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
-        var charactersLength = characters.length;
-        for (var i = 0; i < length; i++) {
-            result += characters.charAt(Math.floor(Math.random() * charactersLength));
-        }
-        return result;
-    }
+function getTables() {
+    return document.querySelectorAll('.table')
+}
 
-    // Function to generate a random number of a specified length
-    function generateRandomNumber(length) {
-        var result = '';
-        for (var i = 0; i < length; i++) {
-            result += Math.floor(Math.random() * 10); // Random digit between 0 and 9
-        }
-        return result;
-    }
+function closePopup() {
+    let popup = document.getElementById("popup");
+    let overlay = document.getElementById("overlay");
+    popup.parentNode.removeChild(popup);
+    overlay.parentNode.removeChild(overlay);
+}
 
-    // Get all span elements within the provided element
-    var spans = element.querySelectorAll('span');
 
-    // Iterate through each span element
-    spans.forEach(function (span) {
-        var originalValue = span.textContent.trim();
-        var replacementValue;
-
-        // Determine if the original value is a number
-        if (!isNaN(originalValue)) {
-            // If the original value is a number, generate a random number of the same length
-            replacementValue = generateRandomNumber(originalValue.length);
-        } else {
-            // If the original value is not a number, generate random text of the same length
-            replacementValue = generateRandomText(originalValue.length);
-        }
-
-        // Update the text content of the span
-        span.textContent = replacementValue;
+function openTablePopup(callback) {
+    let tables = getTables()
+    let tableOptionsHtml = '';
+    tables.forEach(function (table, index) {
+        tableOptionsHtml += `<option value="${index}">Table ${index + 1}</option>`;
     });
+
+    var popupHtml = `
+        <div class="overlay" id="overlay"></div>
+        <div class="popup" id="popup">
+            <select id="options">${tableOptionsHtml}</select>
+            <br><br>
+            <button id='ok'>Okey</button>
+            <button id='close'>Cancel</button>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', popupHtml);
+    document.getElementById('popup').style.display = 'block';
+    document.getElementById('overlay').style.display = 'block';
+
+    document.getElementById('ok').onclick = function() {
+        const tables = getTables()
+        const tableIndex = document.getElementById('options').value
+        callback(tables[tableIndex])
+    }
+
+    document.getElementById('close').onclick = function() {
+        closePopup()
+    }
+}
+
+
+const downloadTableInCsv = function (table, fileName) {
+    let content = ''
+    table.querySelectorAll('tr').forEach(function (tr) {
+        let rowData = []
+        tr.querySelectorAll('td, th').forEach(function (td) {
+            const td_input = td.querySelector('input[type="text"]')
+            let td_text = ''
+            if (td_input) {
+                td_text = td_input.value.trim()
+            }
+            else {
+                td_text = td.innerText.trim()
+            }
+            if (rowData) {
+                rowData.push(td_text)
+            }
+        })
+        content += rowData.join(',') + '\r\n'
+    })
+
+    if (!fileName.endsWith('.csv')) {
+        fileName += '.csv'
+    }
+
+    let blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
+
+    let link = document.createElement("a");
+    if (link.download !== undefined) {
+        let url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", fileName);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    } else {
+        console.log("Your browser does not support automatic download.");
+    }
 }
 
 const replaceSelectToSpan = function () {
@@ -91,62 +132,38 @@ const enterValuesInGivenInput = function () {
     });
 }
 
-const downloadTable = function () {
-    const tables = document.querySelectorAll('table')
-    const table = tables[tables.length - 1]
-    let content = ''
-    table.querySelectorAll('tr').forEach(function (tr) {
-        let rowData = []
-        tr.querySelectorAll('td, th').forEach(function (td) {
-            const td_input = td.querySelector('input[type="text"]')
-            let td_text = ''
-            if (td_input) {
-                td_text = td_input.value.trim()
-            }
-            else {
-                td_text = td.innerText.trim()
-            }
-            if(rowData) {
-                rowData.push(td_text)
-            }
-        })
-        content += rowData.join(',') + '\r\n'
-    })
-
+const createFileName = function () {
     let fileName = ''
     document.querySelectorAll('select').forEach(function (op) {
         const selectedOption = op.selectedOptions[0]
-        if(selectedOption) {
+        if (selectedOption) {
             fileName += selectedOption.innerText + '_'
-        } 
+        }
     })
     fileName = fileName + '.csv'
-
-    // Create a Blob with the CSV content
-    let blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
-
-    // Create a link element
-    let link = document.createElement("a");
-    if (link.download !== undefined) {
-        // Create a link to the file
-        let url = URL.createObjectURL(blob);
-        link.setAttribute("href", url);
-        link.setAttribute("download", fileName);
-
-        // Append the link to the body
-        document.body.appendChild(link);
-
-        // Trigger the download
-        link.click();
-
-        // Clean up
-        document.body.removeChild(link);
-    } else {
-        console.log("Your browser does not support automatic download.");
-    }
-
+    return fileName
 }
 
+const downloadTableTemp = function(table) {
+    const fileName = createFileName()
+    downloadTableInCsv(table, fileName)
+}
+
+const downloadTable = function() {
+    const fileName = createFileName()
+    const tables = getTables()
+    if(tables.length > 1) {
+        openTablePopup(function(table) {
+            downloadTableInCsv(table, fileName)
+        })
+    }
+    else if(tables.length == 1) {
+        downloadTableInCsv(tables[0], fileName)
+    }
+    else {
+        console.log("There is no table.")
+    }
+}
 
 const uploadFile = function () {
     if (document.getElementById('file_upload')) {
@@ -183,7 +200,7 @@ const uploadFile = function () {
 
 const populateData = function (content) {
     if (content) {
-        const table = document.querySelector('table')
+        const table = getTables()[0]
 
         const table_rows = table.querySelectorAll('tr')
 
@@ -235,12 +252,6 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     }
     else if (message.type === "enterValuesInGivenInput" && message.url.includes("RMSA_SChoolMonthly_NP_tablets")) {
         enterValuesInGivenInput()
-    }
-    else if (message.type === "maskValues") {
-        let headerDiv = document.querySelector(".details-box")
-        let dvReport = document.querySelector("#dvReport")
-        maskValues(headerDiv)
-        maskValues(dvReport)
     }
 
     else if (message.type === "downloadTable") {

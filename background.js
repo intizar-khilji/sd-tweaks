@@ -31,12 +31,6 @@ chrome.runtime.onInstalled.addListener(() => {
     });
 
     chrome.contextMenus.create({
-        id: "maskValues",
-        title: "Mask Values",
-        contexts: ["page"]
-    });
-
-    chrome.contextMenus.create({
         id: "downloadTable",
         title: "Download table",
         contexts: ["page"]
@@ -70,9 +64,6 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
         }
         else if (info.menuItemId === "enterValuesInGivenInput") {
             chrome.tabs.sendMessage(tab.id, { type: "enterValuesInGivenInput", url: tab.url })
-        }
-        else if (info.menuItemId === "maskValues") {
-            chrome.tabs.sendMessage(tab.id, { type: "maskValues", url: tab.url })
         }
         else if (info.menuItemId === "downloadTable") {
             chrome.tabs.sendMessage(tab.id, { type: "downloadTable", url: tab.url })
