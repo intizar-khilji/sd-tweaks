@@ -144,11 +144,6 @@ const createFileName = function () {
     return fileName
 }
 
-const downloadTableTemp = function(table) {
-    const fileName = createFileName()
-    downloadTableInCsv(table, fileName)
-}
-
 const downloadTable = function() {
     const fileName = createFileName()
     const tables = getTables()

@@ -14,7 +14,7 @@
     "content_scripts": [
         {
             "matches": [
-                "*://rajshaladarpan.nic.in/*"
+                "*://rajshaladarpan.rajasthan.gov.in/*"
             ],
             "js": [
                 "content.js"
