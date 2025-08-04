@@ -26,18 +26,18 @@ function openTablePopup(callback) {
             <button id='close'>Cancel</button>
         </div>
     `;
-    
+
     document.body.insertAdjacentHTML('beforeend', popupHtml);
     document.getElementById('popup').style.display = 'block';
     document.getElementById('overlay').style.display = 'block';
 
-    document.getElementById('ok').onclick = function() {
+    document.getElementById('ok').onclick = function () {
         const tables = getTables()
         const tableIndex = document.getElementById('options').value
         callback(tables[tableIndex])
     }
 
-    document.getElementById('close').onclick = function() {
+    document.getElementById('close').onclick = function () {
         closePopup()
     }
 }
@@ -113,6 +113,11 @@ const selectFirstOption = function () {
             }
         });
     });
+    document.querySelectorAll("option").forEach(opt => {
+        if (opt.value === "90") {
+            opt.value = "0"
+        }
+    })
 }
 
 const enterValuesInAllInput = function () {
@@ -144,15 +149,15 @@ const createFileName = function () {
     return fileName
 }
 
-const downloadTable = function() {
+const downloadTable = function () {
     const fileName = createFileName()
     const tables = getTables()
-    if(tables.length > 1) {
-        openTablePopup(function(table) {
+    if (tables.length > 1) {
+        openTablePopup(function (table) {
             downloadTableInCsv(table, fileName)
         })
     }
-    else if(tables.length == 1) {
+    else if (tables.length == 1) {
         downloadTableInCsv(tables[0], fileName)
     }
     else {
